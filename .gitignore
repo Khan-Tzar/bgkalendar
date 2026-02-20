@@ -2,3 +2,4 @@ phpsite/forum
 phpsite1/links
 phpsite/internal
 phpsite/bitcoinwallet.php
+.env

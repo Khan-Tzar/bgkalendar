@@ -1,14 +1,21 @@
-FROM ulsmith/alpine-apache-php7
-MAINTAINER You admin@bgkalendar.com
+FROM php:7.2.34-apache
+LABEL maintainer="You <admin@bgkalendar.com>"
 
-# Just Utility for easier troubleshooting.
-RUN apk add vim openjdk9
 ENV APACHE_SERVER_NAME=bgkalendar.com
-ENV JAVA_HOME=/usr/lib/jvm/java-9-openjdk
-ADD /phpsite /app/public
-ADD /java /app/public/java
-WORKDIR /app/public/java
-#RUN chmod a+x /app/public/java/gradlew && /app/public/java/gradlew javadoc && cp -r /app/public/java/build/docs/javadoc /app/public/javadoc
-RUN echo "Wallet Address May Be Specified In /app/public/bitcoinwallet.php" > /app/public/bitcoinwallet.php
 
-RUN chown -R apache:apache /app
+RUN a2enmod rewrite \
+    && echo "ServerName ${APACHE_SERVER_NAME}" > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername \
+    && printf '<Directory /var/www/>\n    AllowOverride All\n</Directory>\n' > /etc/apache2/conf-available/bgcalendar-override.conf \
+    && a2enconf bgcalendar-override
+
+RUN docker-php-ext-install bcmath
+
+ADD phpsite/ /app/public
+ADD java/ /app/public/java
+WORKDIR /app/public/java
+
+RUN echo "Wallet Address May Be Specified In /app/public/bitcoinwallet.php" > /app/public/bitcoinwallet.php \
+    && rm -rf /var/www/html \
+    && ln -s /app/public /var/www/html \
+    && chown -R www-data:www-data /app
