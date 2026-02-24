@@ -1,90 +1,126 @@
 #!/bin/bash
-if [ -f .custom_config ]
-then
-         . ./.custom_config
+set -euo pipefail
+
+if [[ -f .custom_config ]]; then
+  # shellcheck disable=SC1091
+  . ./.custom_config
 fi
-# convert long options to short
+
+display_usage() {
+  echo "Start application containers"
+  echo
+  echo "Options:"
+  echo "-h|--help               Print this help"
+  echo "-r|--recreate           Recreate containers"
+  echo "-b|--build              Build image"
+  echo "-n|--build-no-cache     Build image"
+  echo "-d|--down               Down containers"
+  echo "-u|--up                 Up containers"
+  echo
+}
+
+# Convert long options to short options.
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--help") set -- "$@" "-h" ;;
-    "--recreate") set -- "$@" "-r" ;;
-    *) set -- "$@" "$arg"
+    --help) set -- "$@" -h ;;
+    --recreate) set -- "$@" -r ;;
+    --build) set -- "$@" -b ;;
+    --build-no-cache) set -- "$@" -n ;;
+    --down) set -- "$@" -d ;;
+    --up) set -- "$@" -u ;;
+    *) set -- "$@" "$arg" ;;
   esac
 done
 
-display_usage()
-{
-   echo "Start application containers"
-   echo
-   echo "Options:"
-   echo "-h|--help      Print this help"
-   echo "-r|--recreate  Recreate containers"
-   echo
-}
-
-if [[ -z ${@} ]]
- then
- 	display_usage
-    exit 0
+if [[ $# -eq 0 ]]; then
+  display_usage
+  exit 0
 fi
 
-while getopts "hr" option; do
-    case "${option}"
-        in
-            r) RECREATE=true;;
-            h) display_usage
-               exit 0;;
-            *) display_usage
-               exit 0;;
-    esac
+RECREATE=false
+DO_BUILD=false
+DO_BUILD_NO_CACHE=false
+DO_DOWN=false
+DO_UP=false
+
+while getopts "hrbndu" option; do
+  case "${option}" in
+    r) RECREATE=true ;;
+    b) DO_BUILD=true ;;
+    n) DO_BUILD_NO_CACHE=true ;;
+    d) DO_DOWN=true ;;
+    u) DO_UP=true ;;
+    h)
+      display_usage
+      exit 0
+      ;;
+    *)
+      display_usage
+      exit 1
+      ;;
+  esac
 done
 
-# load configuration
-typeset ENVFILE=.env
-
-if [[ ! -f "${ENVFILE}" ]]; then 
-	cp .env_default ${ENVFILE}
+ENVFILE=".env"
+if [[ -f "${ENVFILE}" ]]; then
+  # shellcheck disable=SC1090
+  . "./${ENVFILE}"
+elif [[ -f ".env_default" ]]; then
+  cp .env_default "${ENVFILE}"
+  # shellcheck disable=SC1090
+  . "./${ENVFILE}"
 fi
 
-. ./.env
-
-export DOCKER_COMPOSE_FILE="docker-compose.yml"
-
-if [[ ! -f $DOCKER_COMPOSE_FILE ]]; then
-    echo "Could not find ${DOCKER_COMPOSE_FILE} configuration file"
+DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE_FILE:-docker-compose.yml}"
+if [[ ! -f "${DOCKER_COMPOSE_FILE}" ]]; then
+  echo "Could not find ${DOCKER_COMPOSE_FILE} configuration file"
+  exit 1
 fi
 
-if [[ ${RECREATE:-false} = true ]]; then
-    # Stopping already running containers
-    echo "docker-compose -f ${DOCKER_COMPOSE_FILE} down"
-    docker compose -f ${DOCKER_COMPOSE_FILE} down
-
-    printf "\n"
-
-    # Building images
-    echo "docker-compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
-    docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm 
+if [[ "${RECREATE}" == "true" ]]; then
+  DO_DOWN=true
+  DO_BUILD=true
+  DO_UP=true
 fi
 
-EXIT_CODE=$?
-
-if [[ ${EXIT_CODE} -eq 0 ]]; then
-    printf "\n"
-
-    # Starting containers
-    echo "docker-compose -f ${DOCKER_COMPOSE_FILE} up --no-build --detach"
-    docker compose -f ${DOCKER_COMPOSE_FILE} up --no-build --detach
-
-    EXIT_CODE=$?
+# --build-no-cache implies build
+if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
+  DO_BUILD=true
 fi
 
-printf "\n"
-
-if [[ ${EXIT_CODE} -eq 0 ]]; then
-    printf "\n"
-    echo "Container running on: $(hostname)"
-    printf "\n"
+# Default behavior when no action flags are passed.
+if [[ "${DO_DOWN}" == "false" && "${DO_BUILD}" == "false" && "${DO_UP}" == "false" ]]; then
+  DO_BUILD=true
+  DO_UP=true
 fi
 
-exit ${EXIT_CODE}
+if [[ "${DO_DOWN}" == "true" ]]; then
+  echo "docker compose -f ${DOCKER_COMPOSE_FILE} down"
+  docker compose -f "${DOCKER_COMPOSE_FILE}" down
+fi
+
+if [[ "${DO_BUILD}" == "true" ]]; then
+  echo
+  if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
+    echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
+    docker compose -f "${DOCKER_COMPOSE_FILE}" build --force-rm --no-cache
+  else
+    echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
+    docker compose -f "${DOCKER_COMPOSE_FILE}" build --force-rm
+  fi
+fi
+
+if [[ "${DO_UP}" == "true" ]]; then
+  echo
+  if [[ "${DO_BUILD}" == "true" ]]; then
+    echo "docker compose -f ${DOCKER_COMPOSE_FILE} up --no-build --detach"
+    docker compose -f "${DOCKER_COMPOSE_FILE}" up --no-build --detach
+  else
+    echo "docker compose -f ${DOCKER_COMPOSE_FILE} up --detach"
+    docker compose -f "${DOCKER_COMPOSE_FILE}" up --detach
+  fi
+
+  echo
+  echo "Container running on: $(hostname)"
+fi
