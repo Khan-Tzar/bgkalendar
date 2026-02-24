@@ -1,4 +1,4 @@
-FROM php:7.2.34-apache
+FROM php:8.0-apache
 LABEL maintainer="You <admin@bgkalendar.com>"
 
 ENV APACHE_SERVER_NAME=bgkalendar.com

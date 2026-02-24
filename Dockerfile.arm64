@@ -1,21 +1,21 @@
 # syntax=docker/dockerfile:1.6
-# ARM64 build (PHP 7 + Apache на Alpine 3.14)
+# ARM64 build (PHP 8.0 + Apache on Alpine 3.14)
 FROM --platform=$TARGETPLATFORM alpine:3.14
 
-LABEL org.opencontainers.image.title="bgcalendar-apache-php7-arm64" \
-      org.opencontainers.image.description="Apache + PHP 7 + JRE 11 (ARM64)" \
+LABEL org.opencontainers.image.title="bgcalendar-apache-php8-arm64" \
+      org.opencontainers.image.description="Apache + PHP 8.0 + JRE 11 (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
-# Alpine 3.14 repositories (where php7- packages are available)
+# Alpine 3.14 repositories
 RUN printf '%s\n' \
     "https://dl-cdn.alpinelinux.org/alpine/v3.14/main" \
     "https://dl-cdn.alpinelinux.org/alpine/v3.14/community" \
     > /etc/apk/repositories && \
     apk add --no-cache \
       apache2 openrc tzdata busybox-extras bash vim ca-certificates \
-      php7 php7-apache2 php7-opcache php7-session php7-mbstring php7-json php7-xml \
-      php7-curl php7-openssl php7-pdo php7-pdo_mysql php7-mysqli php7-zip php7-phar php7-dom \
-      php7-bcmath \
+      php8 php8-apache2 php8-opcache php8-session php8-mbstring php8-json php8-xml \
+      php8-curl php8-openssl php8-pdo php8-pdo_mysql php8-mysqli php8-zip php8-phar php8-dom \
+      php8-bcmath \
       openjdk11-jre-headless
 
 ENV APACHE_SERVER_NAME=bgkalendar.com

@@ -78,6 +78,19 @@ if [[ ! -f "${DOCKER_COMPOSE_FILE}" ]]; then
   exit 1
 fi
 
+compose_build() {
+  local build_args=("$@")
+
+  if docker compose -f "${DOCKER_COMPOSE_FILE}" build "${build_args[@]}"; then
+    return 0
+  fi
+
+  echo
+  echo "Build with BuildKit/buildx failed, retrying with classic builder..."
+  DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 \
+    docker compose -f "${DOCKER_COMPOSE_FILE}" build "${build_args[@]}"
+}
+
 if [[ "${RECREATE}" == "true" ]]; then
   DO_DOWN=true
   DO_BUILD=true
@@ -104,10 +117,10 @@ if [[ "${DO_BUILD}" == "true" ]]; then
   echo
   if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
     echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
-    docker compose -f "${DOCKER_COMPOSE_FILE}" build --force-rm --no-cache
+    compose_build --force-rm --no-cache
   else
     echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
-    docker compose -f "${DOCKER_COMPOSE_FILE}" build --force-rm
+    compose_build --force-rm
   fi
 fi
 
