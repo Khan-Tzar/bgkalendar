@@ -86,7 +86,7 @@ function get() {
   $gregorianLongDateAlternative = $gregorianPeriods[0]->getType()->getName().': '.$gregorianDay.', '
                         .$gregorianPeriods[1]->getType()->getName().': '.$gregorianMonthName.', '
                         .$gregorianPeriods[2]->getType()->getName().': '.$gregorianYear;
-  $gregorianWeekDayIndex =  (daysgrFromStartOfCalendar % 7);
+  $gregorianWeekDayIndex = (intval($daysgrFromStartOfCalendar) % 7);
   $GREGORIAN_WEEKDAYS    = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
   $gregorianWeekDay      = $GREGORIAN_WEEKDAYS[$gregorianWeekDayIndex];
   $gregorianWeekDayIndex =  $gregorianWeekDayIndex == 0 ? 7 : $gregorianWeekDayIndex + 1;

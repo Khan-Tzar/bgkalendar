@@ -1,9 +1,16 @@
 # syntax=docker/dockerfile:1.6
 # ARM64 build (PHP 8.0 + Apache on Alpine 3.14)
+FROM --platform=$TARGETPLATFORM eclipse-temurin:8-jdk AS javadoc_builder
+
+WORKDIR /build/java
+COPY java/ /build/java
+RUN chmod +x ./gradlew && \
+    ./gradlew --no-daemon javadoc
+
 FROM --platform=$TARGETPLATFORM alpine:3.14
 
 LABEL org.opencontainers.image.title="bgcalendar-apache-php8-arm64" \
-      org.opencontainers.image.description="Apache + PHP 8.0 + JRE 11 (ARM64)" \
+      org.opencontainers.image.description="Apache + PHP 8.0 + Java 8 JavaDoc build (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
 # Alpine 3.14 repositories
@@ -15,11 +22,9 @@ RUN printf '%s\n' \
       apache2 openrc tzdata busybox-extras bash vim ca-certificates \
       php8 php8-apache2 php8-opcache php8-session php8-mbstring php8-json php8-xml \
       php8-curl php8-openssl php8-pdo php8-pdo_mysql php8-mysqli php8-zip php8-phar php8-dom \
-      php8-bcmath \
-      openjdk11-jre-headless
+      php8-bcmath
 
-ENV APACHE_SERVER_NAME=bgkalendar.com
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+ENV APACHE_SERVER_NAME=localhost
 ENV DOCROOT=/app/public
 
 RUN mkdir -p "$DOCROOT" /var/log/apache2 /run/apache2 && \
@@ -30,11 +35,12 @@ COPY arm64/httpd.conf /etc/apache2/httpd.conf
 
 RUN chmod +x /bootstrap/start.sh
 
-ADD phpsite/ /app/public
-ADD java/    /app/public/java
+COPY --chown=apache:apache phpsite/ /app/public
+COPY --chown=apache:apache java/ /app/public/java
 WORKDIR /app/public/java
-RUN echo "Wallet Address May Be Specified In /app/public/bitcoinwallet.php" > /app/public/bitcoinwallet.php && \
-    chown -R apache:apache /app
+COPY --from=javadoc_builder /build/java/build/docs/javadoc /app/public/javadoc
+RUN chmod +x /app/public/java/gradlew && \
+    echo "Wallet Address May Be Specified In /app/public/bitcoinwallet.php" > /app/public/bitcoinwallet.php
 
 EXPOSE 80
 ENTRYPOINT ["/bootstrap/start.sh"]

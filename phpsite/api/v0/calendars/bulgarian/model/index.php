@@ -45,16 +45,22 @@ function get() {
   for ($i = 0; $i < count($periods); $i++) {
     $period    = $periods[$i];
     $structures = $period->getPossibleStructures();
+    if ($structures == null) {
+      $structures = array();
+    }
     $structuresJson = null;
     $structuresJson = array();
     for($j = 0; $j < count($structures); $j++) {
       $structure = $structures[$j];
       $subs      = $structure->getSubPeriods();
+      if ($subs == null) {
+        $subs = array();
+      }
       $subsJson = array();
       for ($k = 0; $k < count($subs); $k++) {
         $sub = $subs[$k];
 	$totalLengthInDays = $sub->getTotalLengthInDays();
-	if ($_GET['simplified']) {
+		if (!empty($_GET['simplified'])) {
 	  $subJson = $sub->getName($lang);
 	} else {	
 	  $subJson = array(

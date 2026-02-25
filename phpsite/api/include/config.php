@@ -18,7 +18,7 @@ $db_name   = "images";
 $json_encode_props = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR;
 
 function handle_version($version) {
-   global $stable_version, $testing_version, $old_versions;
+   global $stable_version, $testing_version, $versions;
    if ($version == null) {
       $version = $stable_version;
    }

@@ -16,6 +16,7 @@ display_usage() {
   echo "-n|--build-no-cache     Build image"
   echo "-d|--down               Down containers"
   echo "-u|--up                 Up containers"
+  echo "-t|--test               Run unit tests"
   echo
 }
 
@@ -29,6 +30,7 @@ for arg in "$@"; do
     --build-no-cache) set -- "$@" -n ;;
     --down) set -- "$@" -d ;;
     --up) set -- "$@" -u ;;
+    --test) set -- "$@" -t ;;
     *) set -- "$@" "$arg" ;;
   esac
 done
@@ -43,14 +45,16 @@ DO_BUILD=false
 DO_BUILD_NO_CACHE=false
 DO_DOWN=false
 DO_UP=false
+DO_TEST=false
 
-while getopts "hrbndu" option; do
+while getopts "hrbndut" option; do
   case "${option}" in
     r) RECREATE=true ;;
     b) DO_BUILD=true ;;
     n) DO_BUILD_NO_CACHE=true ;;
     d) DO_DOWN=true ;;
     u) DO_UP=true ;;
+    t) DO_TEST=true ;;
     h)
       display_usage
       exit 0
@@ -103,7 +107,7 @@ if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
 fi
 
 # Default behavior when no action flags are passed.
-if [[ "${DO_DOWN}" == "false" && "${DO_BUILD}" == "false" && "${DO_UP}" == "false" ]]; then
+if [[ "${DO_DOWN}" == "false" && "${DO_BUILD}" == "false" && "${DO_UP}" == "false" && "${DO_TEST}" == "false" ]]; then
   DO_BUILD=true
   DO_UP=true
 fi
@@ -136,4 +140,33 @@ if [[ "${DO_UP}" == "true" ]]; then
 
   echo
   echo "Container running on: $(hostname)"
+fi
+
+if [[ "${DO_TEST}" == "true" ]]; then
+  echo
+  echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps -v \$PWD/phpsite/tests:/app/public/tests bgkalendar sh -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
+  docker compose -f "${DOCKER_COMPOSE_FILE}" run --rm --no-deps \
+    -v "$PWD/phpsite/tests:/app/public/tests" \
+    bgkalendar sh -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php "$test_file"; done'
+
+  echo
+  echo "docker compose -f ${DOCKER_COMPOSE_FILE} up -d --no-build bgkalendar"
+  docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --no-build bgkalendar
+
+  TEST_PORT="${PORT_NUMBER:-8387}"
+  echo "./phpsite/tests/rest_bulgarian_today_http_test.sh ${TEST_PORT}"
+  ./phpsite/tests/rest_bulgarian_today_http_test.sh "${TEST_PORT}"
+  echo "./phpsite/tests/rest_bulgarian_model_http_test.sh ${TEST_PORT}"
+  ./phpsite/tests/rest_bulgarian_model_http_test.sh "${TEST_PORT}"
+  echo "./phpsite/tests/rest_gregorian_today_http_test.sh ${TEST_PORT}"
+  ./phpsite/tests/rest_gregorian_today_http_test.sh "${TEST_PORT}"
+  echo "./phpsite/tests/rest_gregorian_model_http_test.sh ${TEST_PORT}"
+  ./phpsite/tests/rest_gregorian_model_http_test.sh "${TEST_PORT}"
+  PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://130.61.239.255:8387}"
+  echo "./phpsite/tests/page_javadoc_http_test.sh ${PUBLIC_BASE_URL}/javadoc/"
+  ./phpsite/tests/page_javadoc_http_test.sh "${PUBLIC_BASE_URL}/javadoc/"
+  echo "./phpsite/tests/page_kupulica_bg_http_test.sh ${PUBLIC_BASE_URL}/kupu%D0%BBu%D1%86a-bg.php"
+  ./phpsite/tests/page_kupulica_bg_http_test.sh "${PUBLIC_BASE_URL}/kupu%D0%BBu%D1%86a-bg.php"
+  echo "./phpsite/tests/page_papercalendar_2017_http_test.sh ${PUBLIC_BASE_URL}/papercalendar/2017/index.php?lang=bg"
+  ./phpsite/tests/page_papercalendar_2017_http_test.sh "${PUBLIC_BASE_URL}/papercalendar/2017/index.php?lang=bg"
 fi
