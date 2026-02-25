@@ -3,7 +3,7 @@ set -e
 
 # --- Paths ---
 HTTPD_CONF=/etc/apache2/httpd.conf
-PHP_INI=/etc/php81/php.ini
+PHP_INI=/etc/php82/php.ini
 : "${DOCROOT:=/app/public}"
 
 # --- Timezone (optional) ---

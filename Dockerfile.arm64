@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# ARM64 build (PHP 8.1 + Apache on Alpine 3.19)
+# ARM64 build (PHP 8.2 + Apache on Alpine 3.20)
 FROM --platform=$TARGETPLATFORM eclipse-temurin:8-jdk AS javadoc_builder
 
 WORKDIR /build/java
@@ -7,23 +7,23 @@ COPY java/ /build/java
 RUN chmod +x ./gradlew && \
     ./gradlew --no-daemon javadoc
 
-FROM --platform=$TARGETPLATFORM alpine:3.19 AS runtime_base
+FROM --platform=$TARGETPLATFORM alpine:3.20 AS runtime_base
 
-LABEL org.opencontainers.image.title="bgcalendar-apache-php81-arm64" \
-      org.opencontainers.image.description="Apache + PHP 8.1 + Java 8 JavaDoc build (ARM64)" \
+LABEL org.opencontainers.image.title="bgcalendar-apache-php82-arm64" \
+      org.opencontainers.image.description="Apache + PHP 8.2 + Java 8 JavaDoc build (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
-# Alpine 3.19 repositories
+# Alpine 3.20 repositories
 RUN printf '%s\n' \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.19/main" \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.19/community" \
+    "https://dl-cdn.alpinelinux.org/alpine/v3.20/main" \
+    "https://dl-cdn.alpinelinux.org/alpine/v3.20/community" \
     > /etc/apk/repositories && \
     apk add --no-cache \
       apache2 openrc tzdata busybox-extras bash vim ca-certificates \
-      php81 php81-apache2 php81-opcache php81-session php81-mbstring php81-common php81-xml \
-      php81-curl php81-openssl php81-pdo php81-pdo_mysql php81-mysqli php81-zip php81-phar php81-dom \
-      php81-bcmath && \
-    ln -sf /usr/bin/php81 /usr/bin/php
+      php82 php82-apache2 php82-opcache php82-session php82-mbstring php82-common php82-xml \
+      php82-curl php82-openssl php82-pdo php82-pdo_mysql php82-mysqli php82-zip php82-phar php82-dom \
+      php82-bcmath && \
+    ln -sf /usr/bin/php82 /usr/bin/php
 
 ENV APACHE_SERVER_NAME=localhost
 ENV DOCROOT=/app/public

@@ -5,7 +5,7 @@ COPY java/ /build/java
 RUN chmod +x ./gradlew \
     && ./gradlew --no-daemon javadoc
 
-FROM php:8.1-apache AS runtime_base
+FROM php:8.2-apache AS runtime_base
 LABEL maintainer="You <admin@bgkalendar.com>"
 
 ENV APACHE_SERVER_NAME=localhost
