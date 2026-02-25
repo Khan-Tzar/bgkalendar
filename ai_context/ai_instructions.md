@@ -16,6 +16,7 @@ These rules must be followed whenever an AI-assisted tool makes changes in this 
 - Never modify files under `/legacy` or other explicitly marked folders without owner approval.
 - Do not introduce new runtime dependencies without approval — add requests to the issue tracker for dependency changes.
 - Database migrations or schema changes must have an accompanying migration plan and review from the data team.
+- For container validation on slow servers, prefer fast builds with `BUILD_TARGET=runtime_no_javadoc`; use `runtime_with_javadoc` for full release verification.
 
 ## Error Handling & Diagnostics
 - If an error occurs during a change or test, do not attempt blind fixes. Collect logs, reproduce locally, and report the root cause in an issue with steps to reproduce.

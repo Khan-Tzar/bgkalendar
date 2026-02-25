@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# ARM64 build (PHP 8.0 + Apache on Alpine 3.14)
+# ARM64 build (PHP 8.1 + Apache on Alpine 3.16)
 FROM --platform=$TARGETPLATFORM eclipse-temurin:8-jdk AS javadoc_builder
 
 WORKDIR /build/java
@@ -7,16 +7,16 @@ COPY java/ /build/java
 RUN chmod +x ./gradlew && \
     ./gradlew --no-daemon javadoc
 
-FROM --platform=$TARGETPLATFORM alpine:3.14
+FROM --platform=$TARGETPLATFORM alpine:3.16 AS runtime_base
 
-LABEL org.opencontainers.image.title="bgcalendar-apache-php8-arm64" \
-      org.opencontainers.image.description="Apache + PHP 8.0 + Java 8 JavaDoc build (ARM64)" \
+LABEL org.opencontainers.image.title="bgcalendar-apache-php81-arm64" \
+      org.opencontainers.image.description="Apache + PHP 8.1 + Java 8 JavaDoc build (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
-# Alpine 3.14 repositories
+# Alpine 3.16 repositories
 RUN printf '%s\n' \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.14/main" \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.14/community" \
+    "https://dl-cdn.alpinelinux.org/alpine/v3.16/main" \
+    "https://dl-cdn.alpinelinux.org/alpine/v3.16/community" \
     > /etc/apk/repositories && \
     apk add --no-cache \
       apache2 openrc tzdata busybox-extras bash vim ca-certificates \
@@ -38,9 +38,13 @@ RUN chmod +x /bootstrap/start.sh
 COPY --chown=apache:apache phpsite/ /app/public
 COPY --chown=apache:apache java/ /app/public/java
 WORKDIR /app/public/java
-COPY --from=javadoc_builder /build/java/build/docs/javadoc /app/public/javadoc
 RUN chmod +x /app/public/java/gradlew && \
     echo "Wallet Address May Be Specified In /app/public/bitcoinwallet.php" > /app/public/bitcoinwallet.php
 
 EXPOSE 80
 ENTRYPOINT ["/bootstrap/start.sh"]
+
+FROM runtime_base AS runtime_no_javadoc
+
+FROM runtime_base AS runtime_with_javadoc
+COPY --from=javadoc_builder /build/java/build/docs/javadoc /app/public/javadoc

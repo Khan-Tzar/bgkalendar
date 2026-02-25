@@ -27,3 +27,4 @@ This project is an interpretation and implementation framework rather than a fin
 - Multi-language codebase requires consistency in calendar rules across implementations.
 - Public outputs (site/API) should prioritize correctness, traceability of assumptions, and stability.
 - Changes to date algorithms can affect user trust, API consumers, and historical interpretations, so governance and testing are critical.
+- For constrained servers, operations can use a fast container build target that skips JavaDoc generation, then run a full JavaDoc-enabled build before release.

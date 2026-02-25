@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: ${DOCKERFILE:-Dockerfile}
+      target: ${BUILD_TARGET:-runtime_no_javadoc}
       args:
         TARGETPLATFORM: ${PLATFORM:-linux/amd64}
     platform: ${PLATFORM:-linux/amd64}

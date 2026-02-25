@@ -674,6 +674,34 @@ Each star epoch consists of 10 080 000 (ten million and eighty thousand) Earth y
 # Docker Build
 This script builds and runs the project using **Docker Compose**, automatically selecting the correct Dockerfile for your system architecture (`x86_64` or `arm64`).
 
+Current container baseline is **PHP 8.1**.
+
+## Build Targets (Fast vs Full)
+
+The Dockerfiles expose two runtime targets:
+
+- `runtime_no_javadoc` (default): faster build, skips JavaDoc generation
+- `runtime_with_javadoc`: full build, includes generated JavaDoc under `/javadoc`
+
+### Fast PHP-first build (recommended on slow servers)
+
+```bash
+./forge.sh --build --up
+```
+
+### Full build later with JavaDoc
+
+```bash
+./forge.sh --build --with-javadoc --up
+```
+
+You can also select the target directly with Compose:
+
+```bash
+BUILD_TARGET=runtime_no_javadoc docker compose build
+BUILD_TARGET=runtime_with_javadoc docker compose build
+```
+
 ## Usage
 
 ```bash

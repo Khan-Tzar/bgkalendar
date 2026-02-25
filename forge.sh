@@ -14,6 +14,7 @@ display_usage() {
   echo "-r|--recreate           Recreate containers"
   echo "-b|--build              Build image"
   echo "-n|--build-no-cache     Build image"
+  echo "-J|--with-javadoc       Build image including generated JavaDoc"
   echo "-d|--down               Down containers"
   echo "-u|--up                 Up containers"
   echo "-t|--test               Run unit tests"
@@ -28,6 +29,7 @@ for arg in "$@"; do
     --recreate) set -- "$@" -r ;;
     --build) set -- "$@" -b ;;
     --build-no-cache) set -- "$@" -n ;;
+    --with-javadoc) set -- "$@" -J ;;
     --down) set -- "$@" -d ;;
     --up) set -- "$@" -u ;;
     --test) set -- "$@" -t ;;
@@ -46,12 +48,14 @@ DO_BUILD_NO_CACHE=false
 DO_DOWN=false
 DO_UP=false
 DO_TEST=false
+BUILD_TARGET_OVERRIDE=""
 
-while getopts "hrbndut" option; do
+while getopts "hrbndutJ" option; do
   case "${option}" in
     r) RECREATE=true ;;
     b) DO_BUILD=true ;;
     n) DO_BUILD_NO_CACHE=true ;;
+    J) BUILD_TARGET_OVERRIDE="runtime_with_javadoc" ;;
     d) DO_DOWN=true ;;
     u) DO_UP=true ;;
     t) DO_TEST=true ;;
@@ -80,6 +84,25 @@ DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE_FILE:-docker-compose.yml}"
 if [[ ! -f "${DOCKER_COMPOSE_FILE}" ]]; then
   echo "Could not find ${DOCKER_COMPOSE_FILE} configuration file"
   exit 1
+fi
+
+# Auto-detect platform/dockerfile when not explicitly configured.
+if [[ -z "${PLATFORM:-}" || -z "${DOCKERFILE:-}" ]]; then
+  ARCH="$(uname -m)"
+  case "${ARCH}" in
+    x86_64)
+      : "${PLATFORM:=linux/amd64}"
+      : "${DOCKERFILE:=Dockerfile}"
+      ;;
+    aarch64|arm64)
+      : "${PLATFORM:=linux/arm64}"
+      : "${DOCKERFILE:=Dockerfile.arm64}"
+      ;;
+    *)
+      : "${PLATFORM:=linux/amd64}"
+      : "${DOCKERFILE:=Dockerfile}"
+      ;;
+  esac
 fi
 
 compose_build() {
@@ -119,12 +142,13 @@ fi
 
 if [[ "${DO_BUILD}" == "true" ]]; then
   echo
+  BUILD_TARGET="${BUILD_TARGET_OVERRIDE:-${BUILD_TARGET:-runtime_no_javadoc}}"
   if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
-    echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
-    compose_build --force-rm --no-cache
+    echo "BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
+    BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm --no-cache
   else
-    echo "docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
-    compose_build --force-rm
+    echo "BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
+    BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm
   fi
 fi
 

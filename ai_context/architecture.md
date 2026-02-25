@@ -34,6 +34,8 @@ This structure allows the same calendar concepts and algorithms to be reused in 
 ## Deployment Model
 - Local and server deployment are container-friendly through Docker Compose.
 - Architecture-aware Dockerfiles support `x86_64` and `arm64` environments.
+- Container runtime baseline is PHP 8.1.
+- Build targets support two workflows: `runtime_no_javadoc` (fast) and `runtime_with_javadoc` (full JavaDoc publish).
 - Static assets (images, fonts, CSS, JS) are served directly by the web stack, while PHP handles dynamic rendering and API logic.
 
 ## Design Intent
