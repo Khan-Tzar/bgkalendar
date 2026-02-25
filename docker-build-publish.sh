@@ -36,6 +36,7 @@ esac
 
 REPO="bgkalendar/bgkalendar"
 TAG="$(date +%F)"
+IMAGE_TAG="${IMAGE_TAG:-$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo latest)}"
 DOCKERHUB_USER="${DOCKERHUB_USER:-bgkalendar}"
 PORT=80
 CONTAINER_NAME="bgkalendar"
@@ -63,23 +64,25 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
 fi
 
 # Compose build + recreate
-DOCKERFILE="$DF" PLATFORM="$PLATFORM" PORT_NUMBER="$PORT" \
+DOCKERFILE="$DF" PLATFORM="$PLATFORM" PORT_NUMBER="$PORT" IMAGE_TAG="$IMAGE_TAG" \
   docker compose up -d --build --force-recreate
 
 # --- Publish (optional) ---
 if [[ "$DO_PUBLISH" -eq 1 ]]; then
   echo "Preparing to push image to Docker Hub..."
   docker login --username="$DOCKERHUB_USER"
-  docker tag "$REPO:latest" "$REPO:$TAG"
+  docker tag "$REPO:$IMAGE_TAG" "$REPO:latest"
+  docker tag "$REPO:$IMAGE_TAG" "$REPO:$TAG"
+  docker push "$REPO:$IMAGE_TAG"
   docker push "$REPO:latest"
   docker push "$REPO:$TAG"
-  echo "Pushed: $REPO:latest and $REPO:$TAG"
+  echo "Pushed: $REPO:$IMAGE_TAG, $REPO:latest and $REPO:$TAG"
 fi
 
 # --- Hints ---
 echo
 echo "Manual compose example:"
-echo "  DOCKERFILE=$DF PLATFORM=$PLATFORM PORT_NUMBER=$PORT docker compose up -d --build --force-recreate"
+echo "  DOCKERFILE=$DF PLATFORM=$PLATFORM PORT_NUMBER=$PORT IMAGE_TAG=$IMAGE_TAG docker compose up -d --build --force-recreate"
 echo
 echo "To stop:"
 echo "  docker compose down"

@@ -1,6 +1,6 @@
 services:
   bgkalendar:
-    image: bgkalendar/bgkalendar:latest
+    image: bgkalendar/bgkalendar:${IMAGE_TAG:-latest}
     container_name: bgkalendar
     build:
       context: .
@@ -9,6 +9,10 @@ services:
       args:
         TARGETPLATFORM: ${PLATFORM:-linux/amd64}
     platform: ${PLATFORM:-linux/amd64}
+    environment:
+      - TZ=${TIME_ZONE:-UTC}
+      - CONTAINER_TIMEZONE=${TIME_ZONE:-UTC}
+      - PHP_DATE_TIMEZONE=${TIME_ZONE:-UTC}
     ports:
       - "${PORT_NUMBER:-8387}:80"
     stdin_open: true

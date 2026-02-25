@@ -86,6 +86,11 @@ if [[ ! -f "${DOCKER_COMPOSE_FILE}" ]]; then
   exit 1
 fi
 
+# Prefer git tag for image tagging; fallback to latest.
+if [[ -z "${IMAGE_TAG:-}" ]]; then
+  IMAGE_TAG="$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo latest)"
+fi
+
 # Auto-detect platform/dockerfile when not explicitly configured.
 if [[ -z "${PLATFORM:-}" || -z "${DOCKERFILE:-}" ]]; then
   ARCH="$(uname -m)"
@@ -144,22 +149,22 @@ if [[ "${DO_BUILD}" == "true" ]]; then
   echo
   BUILD_TARGET="${BUILD_TARGET_OVERRIDE:-${BUILD_TARGET:-runtime_no_javadoc}}"
   if [[ "${DO_BUILD_NO_CACHE}" == "true" ]]; then
-    echo "BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
-    BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm --no-cache
+    echo "IMAGE_TAG=${IMAGE_TAG} BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm --no-cache"
+    IMAGE_TAG="${IMAGE_TAG}" BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm --no-cache
   else
-    echo "BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
-    BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm
+    echo "IMAGE_TAG=${IMAGE_TAG} BUILD_TARGET=${BUILD_TARGET} docker compose -f ${DOCKER_COMPOSE_FILE} build --force-rm"
+    IMAGE_TAG="${IMAGE_TAG}" BUILD_TARGET="${BUILD_TARGET}" compose_build --force-rm
   fi
 fi
 
 if [[ "${DO_UP}" == "true" ]]; then
   echo
   if [[ "${DO_BUILD}" == "true" ]]; then
-    echo "docker compose -f ${DOCKER_COMPOSE_FILE} up --no-build --detach"
-    docker compose -f "${DOCKER_COMPOSE_FILE}" up --no-build --detach
+    echo "IMAGE_TAG=${IMAGE_TAG} docker compose -f ${DOCKER_COMPOSE_FILE} up --no-build --detach"
+    IMAGE_TAG="${IMAGE_TAG}" docker compose -f "${DOCKER_COMPOSE_FILE}" up --no-build --detach
   else
-    echo "docker compose -f ${DOCKER_COMPOSE_FILE} up --detach"
-    docker compose -f "${DOCKER_COMPOSE_FILE}" up --detach
+    echo "IMAGE_TAG=${IMAGE_TAG} docker compose -f ${DOCKER_COMPOSE_FILE} up --detach"
+    IMAGE_TAG="${IMAGE_TAG}" docker compose -f "${DOCKER_COMPOSE_FILE}" up --detach
   fi
 
   echo
