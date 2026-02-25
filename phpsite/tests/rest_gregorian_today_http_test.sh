@@ -2,7 +2,7 @@
 set -eu
 
 PORT="${1:-8387}"
-URL="http://localhost:${PORT}/api/v0/calendars/gregorian/dates/today"
+URL="http://localhost:${PORT}/api/v0/calendars/gregorian/dates/today/"
 
 tmp_body="$(mktemp)"
 tmp_hdr="$(mktemp)"

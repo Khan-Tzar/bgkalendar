@@ -3,7 +3,7 @@ set -e
 
 # --- Paths ---
 HTTPD_CONF=/etc/apache2/httpd.conf
-PHP_INI=/etc/php8/php.ini
+PHP_INI=/etc/php81/php.ini
 : "${DOCROOT:=/app/public}"
 
 # --- Timezone (optional) ---
@@ -39,7 +39,7 @@ sed -i "s#^DocumentRoot \".*\"#DocumentRoot \"$DOCROOT\"#g" "$HTTPD_CONF"
 # Replace only the FIRST <Directory "..."> to point to $DOCROOT, without touching closing tags
 sed -i "0,/[[:space:]]*<Directory \".*\">/s#^[[:space:]]*<Directory \".*\">#<Directory \"$DOCROOT\">#" "$HTTPD_CONF"
 
-# --- PHP 8 INI tweaks (optional; only if file exists) ---
+# --- PHP INI tweaks (optional; only if file exists) ---
 if [ -f "$PHP_INI" ]; then
   [ -n "$PHP_DATE_TIMEZONE" ] && sed -i "s#^\s*;\?\s*date.timezone\s*=.*#date.timezone = $PHP_DATE_TIMEZONE#" "$PHP_INI"
   # (add any other PHP_* env mappings you need, or leave as-is)

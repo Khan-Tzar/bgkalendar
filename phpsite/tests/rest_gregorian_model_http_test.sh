@@ -2,7 +2,7 @@
 set -eu
 
 PORT="${1:-8387}"
-URL="http://localhost:${PORT}/api/v0/calendars/gregorian/model"
+URL="http://localhost:${PORT}/api/v0/calendars/gregorian/model/"
 
 tmp_body="$(mktemp)"
 tmp_hdr="$(mktemp)"

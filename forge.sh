@@ -123,6 +123,25 @@ compose_build() {
     docker compose -f "${DOCKER_COMPOSE_FILE}" build "${build_args[@]}"
 }
 
+wait_for_http_ready() {
+  local url="$1"
+  local retries="${2:-30}"
+  local delay="${3:-1}"
+  local attempt=1
+
+  while [[ "${attempt}" -le "${retries}" ]]; do
+    if curl -fsS --max-time 3 "${url}" >/dev/null 2>&1; then
+      echo "HTTP ready: ${url}"
+      return 0
+    fi
+    sleep "${delay}"
+    attempt=$((attempt + 1))
+  done
+
+  echo "Timed out waiting for HTTP readiness at ${url}" >&2
+  return 1
+}
+
 if [[ "${RECREATE}" == "true" ]]; then
   DO_DOWN=true
   DO_BUILD=true
@@ -173,16 +192,19 @@ fi
 
 if [[ "${DO_TEST}" == "true" ]]; then
   echo
-  echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps -v \$PWD/phpsite/tests:/app/public/tests bgkalendar sh -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
-  docker compose -f "${DOCKER_COMPOSE_FILE}" run --rm --no-deps \
+  echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps --entrypoint sh -v \$PWD/phpsite/tests:/app/public/tests bgkalendar -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
+  docker compose -f "${DOCKER_COMPOSE_FILE}" run --rm --no-deps --entrypoint sh \
     -v "$PWD/phpsite/tests:/app/public/tests" \
-    bgkalendar sh -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php "$test_file"; done'
+    bgkalendar -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php "$test_file"; done'
 
   echo
   echo "docker compose -f ${DOCKER_COMPOSE_FILE} up -d --no-build bgkalendar"
   docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --no-build bgkalendar
 
   TEST_PORT="${PORT_NUMBER:-8387}"
+  echo "Waiting for local HTTP readiness on port ${TEST_PORT}..."
+  wait_for_http_ready "http://localhost:${TEST_PORT}/api/v0/calendars/bulgarian/dates/today/" 60 1
+
   echo "./phpsite/tests/rest_bulgarian_today_http_test.sh ${TEST_PORT}"
   ./phpsite/tests/rest_bulgarian_today_http_test.sh "${TEST_PORT}"
   echo "./phpsite/tests/rest_bulgarian_model_http_test.sh ${TEST_PORT}"
