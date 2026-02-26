@@ -192,10 +192,10 @@ fi
 
 if [[ "${DO_TEST}" == "true" ]]; then
   echo
-  echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps --entrypoint sh -v \$PWD/phpsite/tests:/app/public/tests bgkalendar -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
+  echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps --entrypoint sh -v \$PWD/phpsite/tests:/app/public/tests bgkalendar -lc 'set -e; /app/public/tests/environment_runtime_test.sh; if command -v java >/dev/null 2>&1; then java -version; else echo \"java: not installed in runtime image\"; fi; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
   docker compose -f "${DOCKER_COMPOSE_FILE}" run --rm --no-deps --entrypoint sh \
     -v "$PWD/phpsite/tests:/app/public/tests" \
-    bgkalendar -lc 'set -e; for test_file in /app/public/tests/*_test.php; do php "$test_file"; done'
+    bgkalendar -lc 'set -e; /app/public/tests/environment_runtime_test.sh; if command -v java >/dev/null 2>&1; then java -version; else echo "java: not installed in runtime image"; fi; for test_file in /app/public/tests/*_test.php; do php "$test_file"; done'
 
   echo
   echo "docker compose -f ${DOCKER_COMPOSE_FILE} up -d --no-build bgkalendar"
