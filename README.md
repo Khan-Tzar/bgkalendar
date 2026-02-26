@@ -702,7 +702,35 @@ BUILD_TARGET=runtime_no_javadoc docker compose build
 BUILD_TARGET=runtime_with_javadoc docker compose build
 ```
 
-## Usage
+## forge.sh Usage
+
+```bash
+./forge.sh [options]
+```
+
+### Options
+
+| Option                 | Description |
+| ---------------------- | ----------- |
+| `-h`, `--help`         | Print help |
+| `-r`, `--recreate`     | Recreate containers (`down` + `build` + `up`) |
+| `-b`, `--build`        | Build image |
+| `-n`, `--build-no-cache` | Build image without cache |
+| `-J`, `--with-javadoc` | Build `runtime_with_javadoc` target |
+| `-d`, `--down`         | Stop/remove containers |
+| `-u`, `--up`           | Start containers |
+| `-t`, `--test`         | Run runtime + API/page tests |
+
+### Examples
+
+```bash
+./forge.sh --build --up
+./forge.sh --build --with-javadoc --up
+./forge.sh --recreate
+./forge.sh --test
+```
+
+## docker-build-publish.sh Usage
 
 ```bash
 ./docker-build-publish.sh [options]

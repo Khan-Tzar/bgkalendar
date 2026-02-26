@@ -8,6 +8,7 @@ fi
 
 display_usage() {
   echo "Start application containers"
+  echo "Support: KhnTzar <ivasgo@gmail.com>"
   echo
   echo "Options:"
   echo "-h|--help               Print this help"
