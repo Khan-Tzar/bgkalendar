@@ -674,7 +674,7 @@ Each star epoch consists of 10 080 000 (ten million and eighty thousand) Earth y
 # Docker Build
 This script builds and runs the project using **Docker Compose**, automatically selecting the correct Dockerfile for your system architecture (`x86_64` or `arm64`).
 
-Current container baseline is **PHP 8.2**.
+Current container baseline is **PHP 8.3**.
 
 ## Build Targets (Fast vs Full)
 
