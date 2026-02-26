@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-# ARM64 build (PHP 8.4 + Apache on Alpine 3.21)
+# ARM64 build (PHP 8.5 + Apache on Alpine edge)
 FROM --platform=$TARGETPLATFORM eclipse-temurin:8-jdk AS javadoc_builder
 
 WORKDIR /build/java
@@ -7,23 +7,23 @@ COPY java/ /build/java
 RUN chmod +x ./gradlew && \
     ./gradlew --no-daemon javadoc
 
-FROM --platform=$TARGETPLATFORM alpine:3.21 AS runtime_base
+FROM --platform=$TARGETPLATFORM alpine:edge AS runtime_base
 
-LABEL org.opencontainers.image.title="bgcalendar-apache-php84-arm64" \
-      org.opencontainers.image.description="Apache + PHP 8.4 + Java 8 JavaDoc build (ARM64)" \
+LABEL org.opencontainers.image.title="bgcalendar-apache-php85-arm64" \
+      org.opencontainers.image.description="Apache + PHP 8.5 + Java 8 JavaDoc build (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
-# Alpine 3.21 repositories
+# Alpine edge repositories
 RUN printf '%s\n' \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.21/main" \
-    "https://dl-cdn.alpinelinux.org/alpine/v3.21/community" \
+    "https://dl-cdn.alpinelinux.org/alpine/edge/main" \
+    "https://dl-cdn.alpinelinux.org/alpine/edge/community" \
     > /etc/apk/repositories && \
     apk add --no-cache \
       apache2 openrc tzdata busybox-extras bash vim ca-certificates \
-      php84 php84-apache2 php84-opcache php84-session php84-mbstring php84-common php84-xml \
-      php84-curl php84-openssl php84-pdo php84-pdo_mysql php84-mysqli php84-zip php84-phar php84-dom \
-      php84-bcmath && \
-    ln -sf /usr/bin/php84 /usr/bin/php
+      php85 php85-apache2 php85-session php85-mbstring php85-common php85-xml \
+      php85-curl php85-openssl php85-pdo php85-pdo_mysql php85-mysqli php85-zip php85-phar php85-dom \
+      php85-bcmath && \
+    ln -sf /usr/bin/php85 /usr/bin/php
 
 ENV APACHE_SERVER_NAME=localhost
 ENV DOCROOT=/app/public
