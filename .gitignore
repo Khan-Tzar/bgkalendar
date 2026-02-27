@@ -4,3 +4,5 @@ phpsite1/links
 phpsite/internal
 phpsite/bitcoinwallet.php
 .env
+java/.gradle
+java/build/

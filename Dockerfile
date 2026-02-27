@@ -1,9 +1,12 @@
-FROM eclipse-temurin:8-jdk AS javadoc_builder
+FROM eclipse-temurin:17-jdk AS javadoc_builder
 
 WORKDIR /build/java
 COPY java/ /build/java
 RUN chmod +x ./gradlew \
-    && ./gradlew --no-daemon javadoc
+    && ./gradlew --no-daemon javadoc \
+    && mkdir -p /build/java/build/docs/javadoc/resources/fonts \
+    && printf "/* Fallback font stylesheet for generated Javadoc */\nbody { font-family: Arial, Helvetica, sans-serif; }\n" > /build/java/build/docs/javadoc/resources/fonts/dejavu.css \
+    && printf '<!doctype html><html><head><meta http-equiv="refresh" content="0; url=allclasses-index.html"><title>Redirect</title></head><body><a href="allclasses-index.html">allclasses-index.html</a></body></html>\n' > /build/java/build/docs/javadoc/allclasses-frame.html
 
 FROM php:8.5-apache AS runtime_base
 LABEL maintainer="You <admin@bgkalendar.com>"

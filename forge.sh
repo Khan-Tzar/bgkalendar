@@ -193,6 +193,8 @@ fi
 
 if [[ "${DO_TEST}" == "true" ]]; then
   echo
+  echo "Starting PHP tests..."
+  echo
   echo "docker compose -f ${DOCKER_COMPOSE_FILE} run --rm --no-deps --entrypoint sh -v \$PWD/phpsite/tests:/app/public/tests bgkalendar -lc 'set -e; /app/public/tests/environment_runtime_test.sh; if command -v java >/dev/null 2>&1; then java -version; else echo \"java: not installed in runtime image\"; fi; for test_file in /app/public/tests/*_test.php; do php \"\$test_file\"; done'"
   docker compose -f "${DOCKER_COMPOSE_FILE}" run --rm --no-deps --entrypoint sh \
     -v "$PWD/phpsite/tests:/app/public/tests" \
@@ -221,4 +223,15 @@ if [[ "${DO_TEST}" == "true" ]]; then
   ./phpsite/tests/page_kupulica_bg_http_test.sh "${PUBLIC_BASE_URL}/kupu%D0%BBu%D1%86a-bg.php"
   echo "./phpsite/tests/page_papercalendar_2017_http_test.sh ${PUBLIC_BASE_URL}/papercalendar/2017/index.php?lang=bg"
   ./phpsite/tests/page_papercalendar_2017_http_test.sh "${PUBLIC_BASE_URL}/papercalendar/2017/index.php?lang=bg"
+
+  echo
+  echo "Starting Java tests..."
+  echo
+  echo "docker run --rm -v \$PWD/java:/work -v \$HOME/.gradle:/root/.gradle -w /work eclipse-temurin:17-jdk bash -lc './gradlew --no-daemon compileJava test && javap -classpath build/classes/java/main bg.util.leto.api.Leto bg.util.leto.base.LetoBase bg.util.leto.impl.LocaleStrings bg.util.leto.impl.bulgarian.LetoBulgarian bg.util.leto.impl.generic.LetoGeneric bg.util.leto.impl.gregorian.LetoGregorian bg.util.leto.impl.julian.LetoJulian >/dev/null && echo \"Java package check passed: bg.util.leto.api, bg.util.leto.base, bg.util.leto.impl, bg.util.leto.impl.bulgarian, bg.util.leto.impl.generic, bg.util.leto.impl.gregorian, bg.util.leto.impl.julian\"'"
+  docker run --rm \
+    -v "$PWD/java:/work" \
+    -v "$HOME/.gradle:/root/.gradle" \
+    -w /work \
+    eclipse-temurin:17-jdk \
+    bash -lc './gradlew --no-daemon compileJava test && javap -classpath build/classes/java/main bg.util.leto.api.Leto bg.util.leto.base.LetoBase bg.util.leto.impl.LocaleStrings bg.util.leto.impl.bulgarian.LetoBulgarian bg.util.leto.impl.generic.LetoGeneric bg.util.leto.impl.gregorian.LetoGregorian bg.util.leto.impl.julian.LetoJulian >/dev/null && echo "Java package check passed: bg.util.leto.api, bg.util.leto.base, bg.util.leto.impl, bg.util.leto.impl.bulgarian, bg.util.leto.impl.generic, bg.util.leto.impl.gregorian, bg.util.leto.impl.julian"'
 fi
