@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk AS javadoc_builder
+FROM eclipse-temurin:21-jdk AS javadoc_builder
 
 WORKDIR /build/java
 COPY java/ /build/java

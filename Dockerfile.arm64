@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 # ARM64 build (PHP 8.5 + Apache on Alpine edge)
-FROM --platform=$TARGETPLATFORM eclipse-temurin:17-jdk AS javadoc_builder
+FROM --platform=$TARGETPLATFORM eclipse-temurin:21-jdk AS javadoc_builder
 
 WORKDIR /build/java
 COPY java/ /build/java
@@ -13,7 +13,7 @@ RUN chmod +x ./gradlew && \
 FROM --platform=$TARGETPLATFORM alpine:edge AS runtime_base
 
 LABEL org.opencontainers.image.title="bgcalendar-apache-php85-arm64" \
-      org.opencontainers.image.description="Apache + PHP 8.5 + Java 17 JavaDoc build (ARM64)" \
+      org.opencontainers.image.description="Apache + PHP 8.5 + Java 21 JavaDoc build (ARM64)" \
       maintainer="You <admin@bgkalendar.com>"
 
 # Alpine edge repositories
