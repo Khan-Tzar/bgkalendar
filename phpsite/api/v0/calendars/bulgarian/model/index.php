@@ -27,7 +27,7 @@ function get() {
     
   global $json_encode_props, $YEAR_ANIMALS_EN, $lang;
   header('Content-Type: application/json');
-  handle_version(basename(dirname(dirname(dirname(__DIR__)))));
+  handle_version(api_version_from_dir(__DIR__));
 
   $proto = "http".((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'    )?'s':'' );
   $path = $_SERVER['REQUEST_URI'];
@@ -132,8 +132,8 @@ if ($method == "GET") {
 } else if ($method == "DELETE") {
   delete();
 } else {
-  $method = $method.replace("\\", "\\\\");
-  $method = $method.replace("'", "\\'");
+  $method = str_replace("\\", "\\\\", $method);
+  $method = str_replace("'", "\\'", $method);
   http_exit(405, "Method '" . $method . "' not allowed. Allowed methods are 'GET', 'POST', 'PUT' and 'DELETE'.");
 }   
 ?>
